@@ -102,12 +102,97 @@ log_level = DEBUG
 
 ```
 
-## Configuring password_file
-For security, the IPMI password is stored in a separate file specified in config.ini. Set this up by creating a file with the password in /opt/dell_fan_control/ipmi_password.txt:
+## Manual Installation
+
+### Step 1: Clone the Repository and Navigate to the Directory
 ```bash
-echo 'YourIPMIPassword' | sudo tee /opt/dell_fan_control/ipmi_password.txt
-sudo chmod 600 /opt/dell_fan_control/ipmi_password.txt
+git clone https://github.com/MartianManBaby/dell_fan_control.git
+cd dell_fan_control
 ```
+
+### Step 2: Create Required Directories and Copy Files
+- Create a directory for the fan control files:
+```bash
+sudo mkdir -p /opt/fan_control
+```
+- Copy the main Python Script and configuration file to this directory:
+```bash
+sudo cp fan_control_service.py /opt/fan_control/
+sudo cp config.ini /opt/fan_control/
+```
+
+### Step 3: Set Up Permissions
+- Set ownership of the /opt/fan_control directory to the user that will run the service (adjust fancontrol to your username or service account):
+```bash
+sudo chown -R fancontrol:fancontrol /opt/fan_control
+```
+- Ensure the Python script and configuration file are executable and readable:
+```bash
+sudo chmod 750 /opt/fan_control/fan_control_service.py
+sudo chmod 640 /opt/fan_control/config.ini
+```
+
+### Step 4: Create the Password File
+- The IPMI password is stored in a separate file for security. Create the file and set secure permissions:
+- Create the password file:
+```bash
+sudo nano /opt/fan_control/ipmi_password.txt
+```
+- Enter your IPMI password in the file, then save and close the editor.
+- Set ownership and permissions on the password file:
+```bash
+sudo chown fancontrol:fancontrol /opt/fan_control/ipmi_password.txt
+sudo chmod 640 /opt/fan_control/ipmi_password.txt
+```
+
+### Step 5: Configure sudo Permissions
+- To allow the script to run IPMI commands without requiring a password each time, edit the sudoers file
+- Open the sudoers file for editing:
+```bash
+sudo visudo
+```
+- Add the following line, adjusting fancontrol to match the user account running the service:
+```bash
+fancontrol ALL=(ALL) NOPASSWD: /usr/bin/ipmitool
+```
+
+### Step 6: Set Up Systemd Service
+- Copy the service file to the systemd directory:
+```bash
+sudo cp fan_control.service /etc/systemd/system/
+```
+- Reload the systemd daemon to recognize the new service:
+```bash
+sudo systemctl daemon-reload
+```
+- Enable the service to start at boot:
+```bash
+sudo systemctl enable fan_control.service
+```
+
+### Step 7: Configure the config.ini File
+- Open the configuration file to customize your settings:
+```bash
+sudo nano /opt/fan_control/config.ini
+```
+- Adjust parameters as needed. Some key settings include:
+```ini
+IP Address (ip): The IP of your IPMI interface.
+Username (username): IPMI user for access.
+Baseline Temp (baseline_temp) and Baseline Speed (baseline_speed): Adjust to optimize fan speed based on temperature thresholds.
+Max Temperature (max_temp): Set a maximum temperature to help control fan speed.
+```
+
+### Step 8: Start the Fan Control Service
+- Start the fan control service:
+```bash
+sudo systemctl start fan_control.service
+```
+- Check the status to ensure it is running:
+```bash
+sudo systemctl status fan_control.service
+```
+Your fan control service should now be active. Logs for the service will be written to /opt/fan_control/fan_control.log, where you can monitor its operation and troubleshoot if necessary.
 
 ## Usage
 After configuring the system, fan speeds will adjust automatically based on server temperatures as follows:
@@ -126,3 +211,4 @@ sudo journalctl -u fan_control.service
 - Ensure ipmitool is installed and properly configured.
 - Confirm IPMI settings (IP, username, password).
 - Check log files for any error messages related to IPMI commands or temperature parsing.
+- Check permissions for the fancontrol user and verify it can access the script, impitool, config, and password file
