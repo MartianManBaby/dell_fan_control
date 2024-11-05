@@ -1,57 +1,43 @@
 #!/bin/bash
 
-# Install necessary packages
-echo "Installing ipmitool and python3..."
-sudo apt update
-sudo apt install -y ipmitool python3
+echo "Starting Dell Fan Control installation..."
 
-# Create directory for fan control files
-echo "Creating directory /opt/fan_control..."
+# Step 1: Create necessary directories and set permissions
 sudo mkdir -p /opt/fan_control
+sudo chown $USER:$USER /opt/fan_control
 
-# Copy Python script and configuration files to /opt/fan_control
-echo "Copying files to /opt/fan_control..."
-sudo cp fan_control_service.py /opt/fan_control/
-sudo cp config.ini /opt/fan_control/
-sudo touch /opt/fan_control/fan_control.log
-sudo cp ipmi_password.txt /opt/fan_control/
+# Step 2: Copy the fan control script and config files to /opt/fan_control
+cp fan_control_service.py /opt/fan_control/
+cp config.ini /opt/fan_control/
 
-# Set permissions and ownership
-echo "Setting permissions..."
-sudo chown -R root:root /opt/fan_control
-sudo chmod -R 640 /opt/fan_control
-sudo chmod 644 /opt/fan_control/config.ini
-sudo chmod 644 /opt/fan_control/fan_control.log
+# Step 3: Prompt the user to enter their IPMI password
+echo "Please enter the IPMI password (it will be saved in /opt/fan_control/ipmi_password.txt):"
+read -s ipmi_password
+echo "$ipmi_password" | sudo tee /opt/fan_control/ipmi_password.txt > /dev/null
+
+# Secure the password file by setting appropriate permissions
 sudo chmod 600 /opt/fan_control/ipmi_password.txt
-sudo chmod +x /opt/fan_control/fan_control_service.py
+echo "IPMI password saved securely."
 
-# Create systemd service file
-echo "Creating fan_control.service in /etc/systemd/system..."
-cat <<EOT | sudo tee /etc/systemd/system/fan_control.service
+# Step 4: Create a systemd service file for fan control
+sudo tee /etc/systemd/system/fan_control.service > /dev/null <<EOL
 [Unit]
 Description=Fan Control Service for Dell R720xd
 After=network.target
 
 [Service]
 ExecStart=/usr/bin/python3 /opt/fan_control/fan_control_service.py
-WorkingDirectory=/opt/fan_control
+User=$USER
 Restart=always
-User=root
 
 [Install]
 WantedBy=multi-user.target
-EOT
+EOL
 
-# Reload systemd, enable and start the service
-echo "Reloading systemd daemon, enabling and starting fan_control.service..."
+# Step 5: Enable and start the service
 sudo systemctl daemon-reload
 sudo systemctl enable fan_control.service
 sudo systemctl start fan_control.service
 
-# Prompt to edit config.ini
-echo "Installation complete. Please edit /opt/fan_control/config.ini to configure IPMI settings and fan control preferences."
-echo "Use 'sudo nano /opt/fan_control/config.ini' to edit the configuration file."
-
-# Confirm service status
-echo "Checking fan_control.service status..."
-sudo systemctl status fan_control.service
+echo "Installation complete. Fan Control Service is now running."
+echo "You may want to update /opt/fan_control/config.ini to adjust settings as needed."
