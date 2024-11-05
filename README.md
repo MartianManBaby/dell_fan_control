@@ -25,18 +25,24 @@ cd dell_fan_control
 ```
 
 ### Step 2: Run the Setup Script
-The provided setup script installs dependencies, copies files to their necessary locations, and sets up a systemd service to run the fan control script automatically on startup.
+The provided setup script installs dependencies, copies files to their necessary locations, and sets up a systemd service to run the fan control script automatically on startup. Place install.sh, fan_control_service.py, config.ini, and ipmi_password.txt in the same directory
 Run the setup script:
 ```bash
+chmod +x install.sh
 sudo ./setup.sh
 ```
 
 ### Step 3: Update Configuration
 Edit the configuration file /opt/dell_fan_control/config.ini to match your server’s IP address and customize your temperature and fan speed settings. The script will use these settings to determine fan speeds dynamically.
+```bash
+sudo nano /opt/fan_control/config.ini
+```
+
+## Config File:
 ```ini
 [ipmi]
 ip = 192.168.1.3
-username = root
+username = fanuser
 password_file = /opt/dell_fan_control/ipmi_password.txt
 ```
 
