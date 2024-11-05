@@ -57,40 +57,43 @@ sudo systemctl status fan_control.service
 The config.ini file allows you to set IPMI parameters, temperature thresholds, fan speed limits, and more. Below are the available options:
 ```bash
 [ipmi]
-# The IP address of your Dell server's IPMI interface (this is usually the iDrac IP)
+# The IP address of the IPMI server
 ip = 192.168.0.3
 
-# IPMI username with admin privileges (A username on the Dell Server)
+# Username for IPMI access
 username = fanuser
 
 # Path to the file containing the IPMI password
-password_file = /opt/dell_fan_control/ipmi_password.txt
+password_file = /opt/fan_control/ipmi_password.txt
 
 [fan_control]
-# Maximum fan speed as RPM for scaling
+# Fan speed to set when manual control is enabled (percentage)
+manual_fan_speed = 15
+
+# Maximum fan RPM value
 max_rpm = 24000
 
-# Minimum temperature for dynamic control (fan speed never goes below this point)
+# Minimum temperature threshold (°C) below which the fan will stay at baseline speed
 min_temp = 30
 
-# Baseline temperature (low threshold for minimal fan speed)
+# Baseline temperature (°C) for low-speed operation
 baseline_temp = 45
 
-# Baseline fan speed at baseline_temp
+# Baseline fan speed (percentage) when temperatures are below baseline
 baseline_speed = 12
 
-# Maximum temperature before fans reach 100% speed
+# Maximum temperature threshold (°C) where fan speed will increase proportionally
 max_temp = 70
 
-# Time interval (in seconds) between temperature checks
+# Interval (in seconds) for updating temperature readings and adjusting fan speed
 update_interval = 60
 
-# Enable/disable auto-control of fans
+# Enable (true) or disable (false) automatic control mode
 auto_control = true
 
-# Enable manual mode and set a specific fan speed percentage
-manual_control = false
-manual_speed = 15
+# Set the logging level (INFO, DEBUG, etc.)
+log_level = DEBUG
+
 ```
 
 ## Configuring password_file
